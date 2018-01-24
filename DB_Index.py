@@ -1,7 +1,8 @@
 ###########################################################################
 ##        Don Bradman Batting Index (c) by Oliver Gordon, 2018           ##
 ##    Don Bradman Batting Index is licensed under a Creative Common      ##
-##    Attribution-NonCommercial-ShareAlike 4.0 International License.    ##
+##      Creative Commons Attribution-NonCommercial-NoDerivatives 4.0     ##
+##                          International License.                       ##
 ###########################################################################
 ##    You should have received a copy of the license along with this     ##
 ## work. If not, see <http://creativecommons.org/licenses/by-nc-sa/4.0/>.##
