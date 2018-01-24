@@ -1,5 +1,5 @@
 ###########################################################################
-##        Don Bradman Batting Index (c) by Oliver Gordon, 2018           ##
+##        Don Bradman Batting Index (c), 2018                            ##
 ##    Don Bradman Batting Index is licensed under a Creative Common      ##
 ##      Creative Commons Attribution-NonCommercial-NoDerivatives 4.0     ##
 ##                          International License.                       ##
