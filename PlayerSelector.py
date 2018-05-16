@@ -28,25 +28,19 @@ NationNumsAll = {'england': 1,
                  'ireland': 29,
                  'afghanistan': 40}
 
-GameFormatsAll = {'T20': 3, 'ODI': 2, 'Test': 1}
-
 AllPlayers = {}
 
 # Select a format & team
 while True:
     try:
-        GameFormatName = str(input('Enter a game format (T20, ODI, Test): '))
-        GameFormatNum = GameFormatsAll[GameFormatName]
-
-        PlayerTeamName = input('Enter a nation that plays ' + GameFormatName + 's: ').lower()
+        PlayerTeamName = input('Enter a test playing nation: ').lower()
         PlayerTeamNum = NationNumsAll[PlayerTeamName]
         break
     except (NameError, KeyError):
         print('Team not found. Try again!')
 
 # Parse cricinfo for list of all players
-PlayerListURL = f"""http://www.espncricinfo.com/england/content/player/caps.json?country={PlayerTeamNum!s};class={
-                GameFormatNum!s}"""
+PlayerListURL = f"http://www.espncricinfo.com/england/content/player/caps.json?country={PlayerTeamNum!s};class=1"
 PlayerListJSON = urllib.request.urlopen(PlayerListURL).read()
 PlayerListSoup = BeautifulSoup(PlayerListJSON, "lxml")
 PlayerListSoupLi = PlayerListSoup.find_all("li", {"class": "ciPlayername"})
