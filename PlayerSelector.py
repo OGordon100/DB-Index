@@ -84,7 +84,7 @@ MatchIDAll = re.findall('\\d+', str(AllMatchTable.findAll("td", {"style": "white
 print(f"Found {(len(MatchIDAll))!s} matches for {PlayerName}. Analysing...")
 for MatchID in MatchIDAll:
 
-    print('Match')
+    print('Match Finished!')
 
     # Open URL
     MatchURL = f"http://www.espncricinfo.com/ci/engine/match/{MatchID!s}.html"
