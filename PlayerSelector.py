@@ -28,8 +28,7 @@ NationNumsAll = {'england': 1,
                  'ireland': 29,
                  'afghanistan': 40}
 
-AllPlayers = {}
-
+PlayerNameAll = {}
 # Select a format & team
 while True:
     try:
@@ -37,21 +36,34 @@ while True:
         PlayerTeamNum = NationNumsAll[PlayerTeamName]
         break
     except (NameError, KeyError):
-        print('Team not found. Try again!')
+        print("Team not found! ", end="", flush=True)
 
-# Parse cricinfo for list of all players
+# Parse and extract list of all players for nation
 PlayerListURL = f"http://www.espncricinfo.com/england/content/player/caps.json?country={PlayerTeamNum!s};class=1"
 PlayerListJSON = urllib.request.urlopen(PlayerListURL).read()
 PlayerListSoup = BeautifulSoup(PlayerListJSON, "lxml")
 PlayerListSoupLi = PlayerListSoup.find_all("li", {"class": "ciPlayername"})
 
-for PlayerConstructor in PlayerListSoupLi:
-    PlayerString = str(PlayerConstructor)
-    PlayerURL = (PlayerConstructor.find('a', href=True)['href'])
-    NamePos = PlayerString.find("middle;") + 9
+for PConstructor in PlayerListSoupLi:
+    PConstructString = str(PConstructor)
+    PConstructURL = (PConstructor.find('a', href=True)['href'])
+    PConstructNamePos = PConstructString.find("middle;") + 9
 
-    PlayerName = PlayerString[NamePos:len(PlayerString) - 9]
-    PlayerNum = int(re.findall('\\d+', PlayerURL)[0])
-    AllPlayers.update({PlayerName: PlayerNum})
+    PConstructName = PConstructString[PConstructNamePos:len(PConstructString) - 9]
+    PConstructNum = int(re.findall('\\d+', PConstructURL)[0])
+    PlayerNameAll.update({PConstructName: PConstructNum})
 
-print(f"Found {len(AllPlayers)!s} players for {PlayerTeamName.title()!s}")
+# Pick player
+print(f"Found {len(PlayerNameAll)!s} players for {PlayerTeamName.title()!s}")
+while True:
+    PlayerName = input(f"Enter a name (e.g. {random.choice(list(PlayerNameAll.keys()))}) or type 'list' \n")
+
+    if PlayerName.lower() == 'list':
+        print(PlayerNameAll.keys())
+    else:
+        try:
+            PlayerNum = PlayerNameAll[PlayerName]
+            break
+        except KeyError:
+            print("Player not found! ", end="", flush=True)
+            continue
