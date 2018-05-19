@@ -1,13 +1,12 @@
-import np as np
-from espncricinfo.match import Match
 import random
 import urllib.request
+import pandas as pd
+from bs4 import BeautifulSoup
 import re
 import numpy as np
-from bs4 import BeautifulSoup
-import pandas as pd
 from datetime import datetime
 import matplotlib.pyplot as pyplot
+import time
 
 # Define game formats/countries
 NationNumsAll = {'england': 1,
@@ -87,22 +86,30 @@ AllMatchID = re.findall('\\d+', str(AllMatchTable.findAll("td", {"style": "white
 
 # For each game played in
 print(f"Found {(len(AllMatchID))!s} matches for {PlayerName}. Analysing...")
-BatsmanTimesNotOut = 0
-BatsmanRuns = 0
-BatsmanInnings = 0
+BatsmanTimesNotOut = np.zeros(len(AllMatchID))
+BatsmanRuns = np.zeros(len(AllMatchID))
+BatsmanInnings = np.zeros(len(AllMatchID))
+BatsmanNetBowling = np.zeros(len(AllMatchID))
+BatsmanNet = np.zeros(len(AllMatchID))
 PrintLoop = 0
 
 for MatchID in AllMatchID:
 
     # Open match URL
+    t = time.time()
+    print(time.time() - t)
     MatchURL = f"http://www.espncricinfo.com/ci/engine/match/{MatchID!s}.html"  # Make sure to retry!
     MatchJSON = urllib.request.urlopen(MatchURL).read()
     MatchSoup = BeautifulSoup(MatchJSON, "lxml")
+    print (time.time() - t)
 
-    # Get bowling table (this is how the internet is meant to be programmed)
     # Figure out who won batted first to determine if looping 0+2 or 1+3
     ScorecardBowlingJSON = pd.read_html(MatchURL)
     BattedFirst = MatchSoup.find("h2").text.split()[0]
+
+    # Get bowling table
+    if hasattr(ScorecardBowlingJSON[-1], 'TEAM') is True: del ScorecardBowlingJSON[-1]  # Bugfix
+
     if BattedFirst in PlayerTeamName.title():
         ScorecardOppBowlingAll = np.vstack(
             np.array([ScorecardBowlingRaw.values for ScorecardBowlingRaw in ScorecardBowlingJSON[::2]]))
@@ -118,7 +125,7 @@ for MatchID in AllMatchID:
         ScorecardOppExtrasRaw = np.vstack(
             np.array([OppExtrasRaw.text for OppExtrasRaw in MatchSoup.findAll("div", {"class": "wrap extras"})[1::2]]))
 
-    # Get batting table (this is how the internet is NOT meant to be programmed...)
+    # Get batting table
     AllBatsmanRawText = MatchSoup.findAll("div", {"class": "cell runs"})
     AllBatsmanRawNames = MatchSoup.findAll("div", {"class": "cell batsmen"})
     AllBatsmanRawCommentary = MatchSoup.findAll("div", {"class": "cell commentary"})
@@ -136,26 +143,32 @@ for MatchID in AllMatchID:
             np.where((np.chararray.find(ScorecardBattingAll[:, 0].astype(str), PlayerName) + 1) == 1)]
 
         # Get number of innings played
-        BatsmanInnings += np.size(ScorecardBatting, 0)
+        BatsmanInnings[PrintLoop] = np.size(ScorecardBatting, 0)
 
         # Get number of runs made by batsman
-        BatsmanRuns += np.sum(list(map(int, ScorecardBatting[:, 1])))
+        BatsmanRuns[PrintLoop] = np.sum(list(map(int, ScorecardBatting[:, 1])))
 
         # Get number of times not out
-        BatsmanTimesNotOut += list(ScorecardBatting[:, 7]).count('not out')
+        BatsmanTimesNotOut[PrintLoop] = list(ScorecardBatting[:, 7]).count('not out')
 
         # Get average of bowlers
-        BatsmanOvers = ScorecardOppBowlingAll[:, 2]
-        BatsmanRunsConc = ScorecardOppBowlingAll[:, 4]
-        BatsmanExtras = np.array(
-            re.findall('\d+', str(re.findall('Extras\d+', str(ScorecardOppExtrasRaw))))).astype(int)
-        BatsmanWickets = ScorecardOppBowlingAll[:, 5]
-        
+        BatsmanRunsConc = np.sum(ScorecardOppBowlingAll[:, 4])
+        BatsmanExtras = np.sum(np.array(
+            re.findall('\d+', str(re.findall('Extras\d+', str(ScorecardOppExtrasRaw))))).astype(int))
+        BatsmanWickets = np.sum(ScorecardOppBowlingAll[:, 5])
+        BatsmanNetBowling[PrintLoop] = (BatsmanRunsConc+BatsmanExtras)/BatsmanWickets
+
+        # Calculate net score for batsman
+        BatsmanNet[PrintLoop] = BatsmanRuns[PrintLoop] / (BatsmanInnings[PrintLoop] - BatsmanTimesNotOut[PrintLoop]) \
+                                - BatsmanNetBowling[PrintLoop]
 
     # Get statistics for bowling
     # if BatBowlAllrounder == 2 | 3:
     #     ScorecardBowling = ScorecardBowlingAll[
     #         np.where((np.chararray.find(ScorecardBowlingAll[:, 0].astype(str), PlayerName) + 1) == 1)]
+    # If haven't bowled, don't do anything!
 
     print(f"    Completed {AllMatchDate[PrintLoop]} vs {AllMatchOpp[PrintLoop]}")
     PrintLoop += 1
+
+
