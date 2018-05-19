@@ -101,14 +101,15 @@ for MatchID in AllMatchID:
     MatchURL = f"http://www.espncricinfo.com/ci/engine/match/{MatchID!s}.html"  # Make sure to retry!
     MatchJSON = urllib.request.urlopen(MatchURL).read()
     MatchSoup = BeautifulSoup(MatchJSON, "lxml")
-    print (time.time() - t)
+    print(time.time() - t)
 
     # Figure out who won batted first to determine if looping 0+2 or 1+3
     ScorecardBowlingJSON = pd.read_html(MatchURL)
     BattedFirst = MatchSoup.find("h2").text.split()[0]
 
     # Get bowling table
-    if hasattr(ScorecardBowlingJSON[-1], 'TEAM') is True: del ScorecardBowlingJSON[-1]  # Bugfix
+    if hasattr(ScorecardBowlingJSON[-1], 'TEAM') is True:
+        del ScorecardBowlingJSON[-1]  # Bugfix
 
     if BattedFirst in PlayerTeamName.title():
         ScorecardOppBowlingAll = np.vstack(
@@ -117,6 +118,7 @@ for MatchID in AllMatchID:
             np.array([ScorecardBowlingRaw.values for ScorecardBowlingRaw in ScorecardBowlingJSON[1::2]]))
         ScorecardOppExtrasRaw = np.vstack(
             np.array([OppExtrasRaw.text for OppExtrasRaw in MatchSoup.findAll("div", {"class": "wrap extras"})[::2]]))
+        print(np.size(ScorecardOppBowlingAll,1))
     else:
         ScorecardOppBowlingAll = np.vstack(
             np.array([ScorecardBowlingRaw.values for ScorecardBowlingRaw in ScorecardBowlingJSON[1::2]]))
@@ -124,43 +126,58 @@ for MatchID in AllMatchID:
             np.array([ScorecardBowlingRaw.values for ScorecardBowlingRaw in ScorecardBowlingJSON[::2]]))
         ScorecardOppExtrasRaw = np.vstack(
             np.array([OppExtrasRaw.text for OppExtrasRaw in MatchSoup.findAll("div", {"class": "wrap extras"})[1::2]]))
+        print(np.size(ScorecardOppBowlingAll, 1))
 
     # Get batting table
     AllBatsmanRawText = MatchSoup.findAll("div", {"class": "cell runs"})
     AllBatsmanRawNames = MatchSoup.findAll("div", {"class": "cell batsmen"})
     AllBatsmanRawCommentary = MatchSoup.findAll("div", {"class": "cell commentary"})
 
-    BatsmanText = np.array([BatsmanRawText.text for BatsmanRawText in AllBatsmanRawText]).reshape((-1, 6))
-    BatsmanNames = np.vstack(np.array([BatsmanRawNames.text for BatsmanRawNames in AllBatsmanRawNames]))
     BatsmanCommentary = np.vstack(
         np.array([BatsmanRawCommentary.text for BatsmanRawCommentary in AllBatsmanRawCommentary]))
-    ScorecardBattingAll = np.concatenate((BatsmanNames, BatsmanText, BatsmanCommentary), 1)
+    BatsmanNames = np.vstack(np.array([BatsmanRawNames.text for BatsmanRawNames in AllBatsmanRawNames]))
+
+    # Pad out table if player is absent/scorecard incomplete (for wartime matches!)
+    if 'absent hurt' in BatsmanCommentary:
+        print(f"Absent player {MatchURL}")
+        BatsmanTextUnfixed = [BatsmanRawText.text for BatsmanRawText in AllBatsmanRawText]
+        for AbsentIndex in np.fliplr(np.where(np.array(BatsmanTextUnfixed) == ' - '))[0]:
+            del BatsmanTextUnfixed[AbsentIndex]
+            BatsmanTextUnfixed[AbsentIndex:AbsentIndex] = ['0', 'absent', 'absent', 'absent', 'absent', 'absent']
+        BatsmanText = np.array(BatsmanTextUnfixed).reshape((-1, 6))
+    else:
+        BatsmanText = np.array([BatsmanRawText.text for BatsmanRawText in AllBatsmanRawText]).reshape((-1, 6))
+
+    try:
+        ScorecardBattingAll = np.concatenate((BatsmanNames, BatsmanText, BatsmanCommentary), 1)
+    except ValueError:
+        print('Corrupted Page. Skipping')
+        continue
 
     # Get statistics for batting
-    if BatBowlAllrounder == 1 | 3:
-        # Get player batting cards (need to search incase player is captain/keeper)
-        ScorecardBatting = ScorecardBattingAll[
-            np.where((np.chararray.find(ScorecardBattingAll[:, 0].astype(str), PlayerName) + 1) == 1)]
+    # Get player batting cards (need to search incase player is captain/keeper)
+    ScorecardBatting = ScorecardBattingAll[
+        np.where((np.chararray.find(ScorecardBattingAll[:, 0].astype(str), PlayerName) + 1) == 1)]
 
-        # Get number of innings played
-        BatsmanInnings[PrintLoop] = np.size(ScorecardBatting, 0)
+    # Get number of innings played
+    BatsmanInnings[PrintLoop] = np.size(ScorecardBatting, 0)
 
-        # Get number of runs made by batsman
-        BatsmanRuns[PrintLoop] = np.sum(list(map(int, ScorecardBatting[:, 1])))
+    # Get number of runs made by batsman
+    BatsmanRuns[PrintLoop] = np.sum(list(map(int, ScorecardBatting[:, 1])))
 
-        # Get number of times not out
-        BatsmanTimesNotOut[PrintLoop] = list(ScorecardBatting[:, 7]).count('not out')
+    # Get number of times not out
+    BatsmanTimesNotOut[PrintLoop] = list(ScorecardBatting[:, 7]).count('not out')
 
-        # Get average of bowlers
-        BatsmanRunsConc = np.sum(ScorecardOppBowlingAll[:, 4])
-        BatsmanExtras = np.sum(np.array(
-            re.findall('\d+', str(re.findall('Extras\d+', str(ScorecardOppExtrasRaw))))).astype(int))
-        BatsmanWickets = np.sum(ScorecardOppBowlingAll[:, 5])
-        BatsmanNetBowling[PrintLoop] = (BatsmanRunsConc+BatsmanExtras)/BatsmanWickets
+    # Get average of bowlers
+    BatsmanRunsConc = np.sum(ScorecardOppBowlingAll[:, 4])
+    BatsmanExtras = np.sum(np.array(
+        re.findall('\d+', str(re.findall('Extras\d+', str(ScorecardOppExtrasRaw))))).astype(int))
+    BatsmanWickets = np.sum(ScorecardOppBowlingAll[:, 5])
+    BatsmanNetBowling[PrintLoop] = (BatsmanRunsConc + BatsmanExtras) / BatsmanWickets
 
-        # Calculate net score for batsman
-        BatsmanNet[PrintLoop] = BatsmanRuns[PrintLoop] / (BatsmanInnings[PrintLoop] - BatsmanTimesNotOut[PrintLoop]) \
-                                - BatsmanNetBowling[PrintLoop]
+    # Calculate net score for batsman
+    BatsmanNet[PrintLoop] = BatsmanRuns[PrintLoop] / (BatsmanInnings[PrintLoop] - BatsmanTimesNotOut[PrintLoop]) \
+                            - BatsmanNetBowling[PrintLoop]
 
     # Get statistics for bowling
     # if BatBowlAllrounder == 2 | 3:
@@ -171,4 +188,4 @@ for MatchID in AllMatchID:
     print(f"    Completed {AllMatchDate[PrintLoop]} vs {AllMatchOpp[PrintLoop]}")
     PrintLoop += 1
 
-
+# Calculate Don Bradman Index
