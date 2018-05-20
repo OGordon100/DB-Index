@@ -56,9 +56,10 @@ def DBCalculator(PlayerName, PlayerTeamName, PlayerNum):
                     ExtraTableNum]  # Built in compiler seems to skip 1 line, so need to run twice :(
 
         # Deal with abandoned matches
-        if len(ScorecardBowlingJSON) < 2:
-            print('         Match Abandoned. Skipping')
+        if len(ScorecardBowlingJSON) <= 2:
+            print(f"         {AllMatchDate[PrintLoop]} Abandoned. Skipping")
             BatsmanNet[PrintLoop] = float('nan')
+            PrintLoop += 1
             continue
 
         # Parse out actual bowling table (and extras which aren't in a table for some reason)
@@ -128,8 +129,9 @@ def DBCalculator(PlayerName, PlayerTeamName, PlayerNum):
         try:
             ScorecardBattingAll = np.concatenate((BatsmanNames, np.vstack(AllBatsmanRuns), BatsmanCommentary), 1)
         except ValueError:
-            print('         Corrupted Page. Skipping')
+            print(f"         {AllMatchDate[PrintLoop]} Corrupted. Skipping")
             BatsmanNet[PrintLoop] = float('nan')
+            PrintLoop += 1
             continue
 
         # Get statistics for batting
@@ -182,7 +184,7 @@ def DBCalculator(PlayerName, PlayerTeamName, PlayerNum):
     for GamesPlayed in range(0, len(AllMatchID)):
         DBBatsman[GamesPlayed] = np.nanmean(AllDBBatsman[0:GamesPlayed + 1])
 
-    DB = {"Name": PlayerName, "Dates": AllMatchDate, "DB Index": DBBatsman}
+    DB = {"Name": PlayerName, "Country": PlayerTeamName.title(), "Dates": AllMatchDate, "DB Index": DBBatsman}
 
     # Display results
     PlotDates = list(map(datetime.datetime.strptime, AllMatchDate, len(AllMatchDate) * ['%d %b %Y']))
