@@ -5,7 +5,9 @@ from bs4 import BeautifulSoup
 import re
 import numpy as np
 from datetime import datetime
-import matplotlib.pyplot as pyplot
+import matplotlib.pyplot as plt
+from matplotlib import dates
+import datetime
 import time
 
 # Define game formats/countries
@@ -97,8 +99,13 @@ for MatchID in AllMatchID:
 
     # Open match URL
     t = time.time()
-    MatchURL = f"http://www.espncricinfo.com/ci/engine/match/{MatchID!s}.html"  # Make sure to retry!
-    MatchJSON = urllib.request.urlopen(MatchURL).read()
+    MatchURL = f"http://www.espncricinfo.com/ci/engine/match/{MatchID!s}.html"
+    while True:
+        try:
+            MatchJSON = urllib.request.urlopen(MatchURL).read()
+            break
+        except urllib.error.HTTPError:
+            print('         Server Timeout. Retrying...')
     MatchSoup = BeautifulSoup(MatchJSON, "lxml")
 
     # Figure out who won batted first to determine if looping 0+2 or 1+3 for bowling card
@@ -106,9 +113,22 @@ for MatchID in AllMatchID:
     BattedFirst = MatchSoup.find("h2").text.split()[0]
 
     # Get bowling table (this part of the webpage is "mostly" coded properly
-    if hasattr(ScorecardBowlingJSON[-1], 'TEAM') is True:
-        del ScorecardBowlingJSON[-1]  # Bugfix
 
+    # Deal with too many tables being served for no reason
+    for ExtraTableNum,ExtraTableFixData in enumerate(ScorecardBowlingJSON):
+        if np.size(ExtraTableFixData,1) < 10:
+            del ScorecardBowlingJSON[ExtraTableNum]
+    for ExtraTableNum,ExtraTableFixData in enumerate(ScorecardBowlingJSON):
+        if np.size(ExtraTableFixData,1) < 10:
+            del ScorecardBowlingJSON[ExtraTableNum]  # Built in compiler seems to skip 1 line, so need to run twice :(
+
+    # Deal with abandoned matches
+    if len(ScorecardBowlingJSON) < 2:
+        print('         Match Abandoned. Skipping')
+        BatsmanNet[PrintLoop] = float('nan')
+        continue
+
+    # Parse out actual bowling table (and extras which aren't in a table for some reason)
     if BattedFirst in PlayerTeamName.title():
         ScorecardOppBowlingAll = np.vstack(
             np.array([ScorecardBowlingRaw.values for ScorecardBowlingRaw in ScorecardBowlingJSON[0:4][::2]]))
@@ -125,9 +145,9 @@ for MatchID in AllMatchID:
             np.array([OppExtrasRaw.text for OppExtrasRaw in MatchSoup.findAll("div", {"class": "wrap extras"})[1::2]]))
 
     # Get batting table (this part of the webpage is in an arbitrary non-table format for reasons unknown)
-    AllBatsmanRawText = MatchSoup.findAll("div", {"class": "cell runs"})
-    AllBatsmanRawNames = MatchSoup.findAll("div", {"class": "cell batsmen"})
-    AllBatsmanRawCommentary = MatchSoup.findAll("div", {"class": "cell commentary"})
+    AllBatsmanRawText = MatchSoup.findAll("div", {"class": "cell runs"})[:]
+    AllBatsmanRawNames = MatchSoup.findAll("div", {"class": "cell batsmen"})[:]
+    AllBatsmanRawCommentary = MatchSoup.findAll("div", {"class": "cell commentary"})[:]
 
     BatsmanCommentary = np.vstack(
         np.array([BatsmanRawCommentary.text for BatsmanRawCommentary in AllBatsmanRawCommentary]))
@@ -173,7 +193,8 @@ for MatchID in AllMatchID:
     try:
         ScorecardBattingAll = np.concatenate((BatsmanNames, np.vstack(AllBatsmanRuns), BatsmanCommentary), 1)
     except ValueError:
-        print('Corrupted Page. Skipping')
+        print('         Corrupted Page. Skipping')
+        BatsmanNet[PrintLoop] = float('nan')
         continue
 
     # Get statistics for batting
@@ -221,8 +242,21 @@ for MatchID in AllMatchID:
 DBNet = 69.309311145510833
 m = 0.7214037937129101
 c = 50
-AllDBBatsman = (m*BatsmanNet)+c
+AllDBBatsman = (m * BatsmanNet) + c
 DBBatsman = np.zeros(len(AllMatchID))
-for GamesPlayed in range(0,len(AllMatchID)):
-    DBBatsman[GamesPlayed] = np.nanmean(AllDBBatsman[0:GamesPlayed+1])
+for GamesPlayed in range(0, len(AllMatchID)):
+    DBBatsman[GamesPlayed] = np.nanmean(AllDBBatsman[0:GamesPlayed + 1])
 
+# Display results
+PlotDates = list(map(datetime.datetime.strptime, AllMatchDate, len(AllMatchDate) * ['%d %b %Y']))
+PlotFormat = dates.DateFormatter('%b %Y')
+plt.plot_date(PlotDates, DBBatsman, 'o-')
+plt.ylim(0, 100)
+plt.xlabel('Date')
+plt.ylabel('Don Bradman Index')
+plt.title(f"DB Index for {PlayerName} = {DBBatsman[-1]:.2f}")
+
+ax = plt.gcf().axes[0].xaxis.set_major_formatter(PlotFormat)
+plt.gcf().autofmt_xdate(rotation=60)
+
+plt.show()

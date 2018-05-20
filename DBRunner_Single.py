@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import re
 import numpy as np
 from DBFinder import DBCalculator
+import random
 
 # Define game formats/countries
 NationNumsAll = {'england': 1,

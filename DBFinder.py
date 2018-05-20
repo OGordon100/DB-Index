@@ -34,17 +34,34 @@ def DBCalculator(PlayerName, PlayerTeamName, PlayerNum):
         # Open match URL
         t = time.time()
         MatchURL = f"http://www.espncricinfo.com/ci/engine/match/{MatchID!s}.html"  # Make sure to retry!
-        MatchJSON = urllib.request.urlopen(MatchURL).read()
+        while True:
+            try:
+                MatchJSON = urllib.request.urlopen(MatchURL).read()
+                break
+            except urllib.error.HTTPError:
+                print('         Server Timeout. Retrying...')
         MatchSoup = BeautifulSoup(MatchJSON, "lxml")
 
         # Figure out who won batted first to determine if looping 0+2 or 1+3 for bowling card
         ScorecardBowlingJSON = pd.read_html(MatchURL)
         BattedFirst = MatchSoup.find("h2").text.split()[0]
 
-        # Get bowling table (this part of the webpage is "mostly" coded properly
-        if hasattr(ScorecardBowlingJSON[-1], 'TEAM') is True:
-            del ScorecardBowlingJSON[-1]  # Bugfix
+        # Deal with too many tables being served for no reason
+        for ExtraTableNum, ExtraTableFixData in enumerate(ScorecardBowlingJSON):
+            if np.size(ExtraTableFixData, 1) < 10:
+                del ScorecardBowlingJSON[ExtraTableNum]
+        for ExtraTableNum, ExtraTableFixData in enumerate(ScorecardBowlingJSON):
+            if np.size(ExtraTableFixData, 1) < 10:
+                del ScorecardBowlingJSON[
+                    ExtraTableNum]  # Built in compiler seems to skip 1 line, so need to run twice :(
 
+        # Deal with abandoned matches
+        if len(ScorecardBowlingJSON) < 2:
+            print('         Match Abandoned. Skipping')
+            BatsmanNet[PrintLoop] = float('nan')
+            continue
+
+        # Parse out actual bowling table (and extras which aren't in a table for some reason)
         if BattedFirst in PlayerTeamName.title():
             ScorecardOppBowlingAll = np.vstack(
                 np.array([ScorecardBowlingRaw.values for ScorecardBowlingRaw in ScorecardBowlingJSON[0:4][::2]]))
@@ -111,7 +128,8 @@ def DBCalculator(PlayerName, PlayerTeamName, PlayerNum):
         try:
             ScorecardBattingAll = np.concatenate((BatsmanNames, np.vstack(AllBatsmanRuns), BatsmanCommentary), 1)
         except ValueError:
-            print('Corrupted Page. Skipping')
+            print('         Corrupted Page. Skipping')
+            BatsmanNet[PrintLoop] = float('nan')
             continue
 
         # Get statistics for batting
@@ -170,7 +188,7 @@ def DBCalculator(PlayerName, PlayerTeamName, PlayerNum):
     PlotDates = list(map(datetime.datetime.strptime, AllMatchDate, len(AllMatchDate) * ['%d %b %Y']))
     PlotFormat = dates.DateFormatter('%b %Y')
     plt.plot_date(PlotDates, DBBatsman, 'o-')
-    plt.ylim(0, 100)
+    plt.ylim(0, 110)
     plt.xlabel('Date')
     plt.ylabel('Don Bradman Index')
     plt.title(f"DB Index for {PlayerName} = {DBBatsman[-1]:.2f}")
