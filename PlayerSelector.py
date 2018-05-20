@@ -111,16 +111,16 @@ for MatchID in AllMatchID:
 
     if BattedFirst in PlayerTeamName.title():
         ScorecardOppBowlingAll = np.vstack(
-            np.array([ScorecardBowlingRaw.values for ScorecardBowlingRaw in ScorecardBowlingJSON[::2]]))
+            np.array([ScorecardBowlingRaw.values for ScorecardBowlingRaw in ScorecardBowlingJSON[0:4][::2]]))
         ScorecardTeamBowlingAll = np.vstack(
-            np.array([ScorecardBowlingRaw.values for ScorecardBowlingRaw in ScorecardBowlingJSON[1::2]]))
+            np.array([ScorecardBowlingRaw.values for ScorecardBowlingRaw in ScorecardBowlingJSON[0:4][1::2]]))
         ScorecardOppExtrasRaw = np.vstack(
             np.array([OppExtrasRaw.text for OppExtrasRaw in MatchSoup.findAll("div", {"class": "wrap extras"})[::2]]))
     else:
         ScorecardOppBowlingAll = np.vstack(
-            np.array([ScorecardBowlingRaw.values for ScorecardBowlingRaw in ScorecardBowlingJSON[1::2]]))
+            np.array([ScorecardBowlingRaw.values for ScorecardBowlingRaw in ScorecardBowlingJSON[0:4][1::2]]))
         ScorecardTeamBowlingAll = np.vstack(
-            np.array([ScorecardBowlingRaw.values for ScorecardBowlingRaw in ScorecardBowlingJSON[::2]]))
+            np.array([ScorecardBowlingRaw.values for ScorecardBowlingRaw in ScorecardBowlingJSON[0:4][::2]]))
         ScorecardOppExtrasRaw = np.vstack(
             np.array([OppExtrasRaw.text for OppExtrasRaw in MatchSoup.findAll("div", {"class": "wrap extras"})[1::2]]))
 
@@ -219,7 +219,10 @@ for MatchID in AllMatchID:
 
 # Calculate Don Bradman Index
 DBNet = 69.309311145510833
-m = 1.4355935494886911
-c = 0.5
-DBBatsman = (m*BatsmanNet)+c
+m = 0.7214037937129101
+c = 50
+AllDBBatsman = (m*BatsmanNet)+c
+DBBatsman = np.zeros(len(AllMatchID))
+for GamesPlayed in range(0,len(AllMatchID)):
+    DBBatsman[GamesPlayed] = np.nanmean(AllDBBatsman[0:GamesPlayed+1])
 
