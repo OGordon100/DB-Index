@@ -229,8 +229,12 @@ for MatchID in AllMatchID:
                                 - BatsmanNetBowling[PrintLoop]
 
     # Get statistics for bowling
-    # if BatBowlAllrounder == 2 | 3:
-    #     ScorecardBowling = ScorecardBowlingAll[
+    # Find player in bowling scorecard
+
+    # Get runs conceded as average of overall economy
+
+    # Store
+    # ScorecardBowling = ScorecardBowlingAll[
     #         np.where((np.chararray.find(ScorecardBowlingAll[:, 0].astype(str), PlayerName) + 1) == 1)]
     # If haven't bowled, don't do anything!
 

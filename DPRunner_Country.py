@@ -56,18 +56,8 @@ for PConstructor in PlayerListSoupLi:
 
 # Pick player
 print(f"Found {len(PlayerNameAll)!s} players for {PlayerTeamName.title()!s}")
-while True:
-    PlayerName = input(f"Enter a name (e.g. {random.choice(list(PlayerNameAll.keys()))}) or type 'list' \n")
-
-    if PlayerName.lower() == 'list':
-        print(PlayerNameAll.keys())
-    else:
-        try:
-            PlayerNum = PlayerNameAll[PlayerName]
-            break
-        except KeyError:
-            print("Player not found! ", end="", flush=True)
-            continue
 
 # Find DB index
-DB = DBCalculator(PlayerName, PlayerTeamName, PlayerNum, )
+DBAll = []
+for PlayerName, PlayerNum in PlayerNameAll.items():
+    DBAll.append(DBCalculator(PlayerTeamName, PlayerName, PlayerTeamName, PlayerNum))
