@@ -182,7 +182,7 @@ def DBCalculator(PlayerName, PlayerTeamName, PlayerNum):
     AllDBBatsman = (m * BatsmanNet) + c
     DBBatsman = np.zeros(len(AllMatchID))
     for GamesPlayed in range(0, len(AllMatchID)):
-        DBBatsman[GamesPlayed] = np.nanmean(AllDBBatsman[0:GamesPlayed + 1])
+        DBBatsman[GamesPlayed] = np.round(np.nanmean(AllDBBatsman[0:GamesPlayed + 1]),2)
 
     DB = {"Country": PlayerTeamName.title(), "Dates": np.ndarray.tolist(AllMatchDate), "DB Index": np.ndarray.tolist(DBBatsman)}
 
