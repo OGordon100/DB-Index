@@ -70,12 +70,13 @@ while True:
             continue
 
 
+# Find DB index
+DB = DBCalculator(PlayerName, PlayerTeamName, PlayerNum)
+
 # Open DB database
 with open('Database.json', 'r') as fp:
     Database = json.load(fp)
 
-# Find DB index
-DB = DBCalculator(PlayerName, PlayerTeamName, PlayerNum)
 Database[PlayerTeamName.title()][PlayerName] = DB
 
 # Save DB database
