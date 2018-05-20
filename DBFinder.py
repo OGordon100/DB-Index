@@ -56,7 +56,7 @@ def DBCalculator(PlayerName, PlayerTeamName, PlayerNum):
                     ExtraTableNum]  # Built in compiler seems to skip 1 line, so need to run twice :(
 
         # Deal with abandoned matches
-        if len(ScorecardBowlingJSON) <= 2:
+        if len(ScorecardBowlingJSON) <= 1:
             print(f"         {AllMatchDate[PrintLoop]} Abandoned. Skipping")
             BatsmanNet[PrintLoop] = float('nan')
             PrintLoop += 1
