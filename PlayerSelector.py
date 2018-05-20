@@ -118,7 +118,6 @@ for MatchID in AllMatchID:
             np.array([ScorecardBowlingRaw.values for ScorecardBowlingRaw in ScorecardBowlingJSON[1::2]]))
         ScorecardOppExtrasRaw = np.vstack(
             np.array([OppExtrasRaw.text for OppExtrasRaw in MatchSoup.findAll("div", {"class": "wrap extras"})[::2]]))
-        print(np.size(ScorecardOppBowlingAll,1))
     else:
         ScorecardOppBowlingAll = np.vstack(
             np.array([ScorecardBowlingRaw.values for ScorecardBowlingRaw in ScorecardBowlingJSON[1::2]]))
@@ -126,7 +125,6 @@ for MatchID in AllMatchID:
             np.array([ScorecardBowlingRaw.values for ScorecardBowlingRaw in ScorecardBowlingJSON[::2]]))
         ScorecardOppExtrasRaw = np.vstack(
             np.array([OppExtrasRaw.text for OppExtrasRaw in MatchSoup.findAll("div", {"class": "wrap extras"})[1::2]]))
-        print(np.size(ScorecardOppBowlingAll, 1))
 
     # Get batting table
     AllBatsmanRawText = MatchSoup.findAll("div", {"class": "cell runs"})
@@ -137,19 +135,42 @@ for MatchID in AllMatchID:
         np.array([BatsmanRawCommentary.text for BatsmanRawCommentary in AllBatsmanRawCommentary]))
     BatsmanNames = np.vstack(np.array([BatsmanRawNames.text for BatsmanRawNames in AllBatsmanRawNames]))
 
-    # Pad out table if player is absent/scorecard incomplete (for wartime matches!)
-    if 'absent hurt' in BatsmanCommentary:
-        print(f"Absent player {MatchURL}")
-        BatsmanTextUnfixed = [BatsmanRawText.text for BatsmanRawText in AllBatsmanRawText]
-        for AbsentIndex in np.fliplr(np.where(np.array(BatsmanTextUnfixed) == ' - '))[0]:
-            del BatsmanTextUnfixed[AbsentIndex]
-            BatsmanTextUnfixed[AbsentIndex:AbsentIndex] = ['0', 'absent', 'absent', 'absent', 'absent', 'absent']
-        BatsmanText = np.array(BatsmanTextUnfixed).reshape((-1, 6))
-    else:
-        BatsmanText = np.array([BatsmanRawText.text for BatsmanRawText in AllBatsmanRawText]).reshape((-1, 6))
+    # Find index of "R" to find out where each innings changes
+    RIdx = np.array(())
+    AllBatsmanRuns = []
+    for idx, BatsmanRawText in enumerate(AllBatsmanRawText):
+        # Find index of "R" to find out where each innings changes
+        if BatsmanRawText.text == 'R':
+            RIdx = np.append(RIdx, idx)
+    NumInnings = len(RIdx)
+    RIdx = np.append(RIdx, len(AllBatsmanRawText) + 1)
+
+    # For each innings
+    for Innings in range(0, NumInnings):
+        # Get innings raw text
+        InningsAllBatsmanRawText = AllBatsmanRawText[int(RIdx[Innings]):int(RIdx[Innings + 1])]
+
+        # Find number of columns per innings (because some scorecards miss data)
+        NumColumns = 0
+        for InningsBatsmanRawText in InningsAllBatsmanRawText:
+            NumColumns += len(re.findall("R|M|B|4s|6s|SR", InningsBatsmanRawText.text))
+
+        # Pad out array if incomplete because of absent batsman (for wartime matches!) THIS CAN BE REWRITTEN
+        if 'absent hurt' in BatsmanCommentary:
+            print(f"Absent player {MatchURL}")
+            InningsBatsmanTextUnfixed = [InningsBatsmanRawText.text for InningsBatsmanRawText in
+                                         InningsAllBatsmanRawText]
+            for AbsentIndex in np.fliplr(np.where(np.array(InningsBatsmanTextUnfixed) == ' - '))[0]:
+                del InningsBatsmanTextUnfixed[AbsentIndex]
+                InningsBatsmanTextUnfixed[AbsentIndex:AbsentIndex] = np.repeat('absent hurt', NumColumns)
+            InningsAllBatsmanRawText = np.array(InningsBatsmanTextUnfixed)
+
+        # Get runs column
+        AllBatsmanRuns = np.append(AllBatsmanRuns, np.array(
+            [BatsmanRawText.text for BatsmanRawText in InningsAllBatsmanRawText[0::NumColumns]]))
 
     try:
-        ScorecardBattingAll = np.concatenate((BatsmanNames, BatsmanText, BatsmanCommentary), 1)
+        ScorecardBattingAll = np.concatenate((BatsmanNames, np.vstack(AllBatsmanRuns), BatsmanCommentary), 1)
     except ValueError:
         print('Corrupted Page. Skipping')
         continue
@@ -166,7 +187,7 @@ for MatchID in AllMatchID:
     BatsmanRuns[PrintLoop] = np.sum(list(map(int, ScorecardBatting[:, 1])))
 
     # Get number of times not out
-    BatsmanTimesNotOut[PrintLoop] = list(ScorecardBatting[:, 7]).count('not out')
+    BatsmanTimesNotOut[PrintLoop] = list(ScorecardBatting[:, 2]).count('not out')
 
     # Get average of bowlers
     BatsmanRunsConc = np.sum(ScorecardOppBowlingAll[:, 4])
