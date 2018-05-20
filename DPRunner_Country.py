@@ -3,8 +3,7 @@ from bs4 import BeautifulSoup
 import re
 import numpy as np
 from DBFinder import DBCalculator
-import random
-import multiprocessing
+import json
 
 # Define game formats/countries
 NationNumsAll = {'england': 1,
@@ -57,7 +56,15 @@ for PConstructor in PlayerListSoupLi:
 # Pick player
 print(f"Found {len(PlayerNameAll)!s} players for {PlayerTeamName.title()!s}")
 
+# Open DB database
+with open('Database.json', 'r') as fp:
+    Database = json.load(fp)
+
 # Find DB index
-DBAll = []
 for PlayerName, PlayerNum in PlayerNameAll.items():
-    DBAll.append(DBCalculator(PlayerTeamName, PlayerName, PlayerTeamName, PlayerNum))
+    DB = DBCalculator(PlayerName, PlayerTeamName, PlayerNum)
+    Database[PlayerTeamName.title()][PlayerName] = DB
+
+# Save DB database
+with open('Database.json', 'w') as fp:
+    json.dump(Database, fp)

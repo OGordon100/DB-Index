@@ -4,7 +4,7 @@ import re
 import numpy as np
 from DBFinder import DBCalculator
 import random
-import multiprocessing
+import json
 
 # Define game formats/countries
 NationNumsAll = {'england': 1,
@@ -69,5 +69,15 @@ while True:
             print("Player not found! ", end="", flush=True)
             continue
 
+
+# Open DB database
+with open('Database.json', 'r') as fp:
+    Database = json.load(fp)
+
 # Find DB index
-DB = DBCalculator(PlayerName, PlayerTeamName, PlayerNum, )
+DB = DBCalculator(PlayerName, PlayerTeamName, PlayerNum)
+Database[PlayerTeamName.title()][PlayerName] = DB
+
+# Save DB database
+with open('Database.json', 'w') as fp:
+    json.dump(Database, fp)

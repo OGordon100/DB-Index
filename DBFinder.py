@@ -184,7 +184,7 @@ def DBCalculator(PlayerName, PlayerTeamName, PlayerNum):
     for GamesPlayed in range(0, len(AllMatchID)):
         DBBatsman[GamesPlayed] = np.nanmean(AllDBBatsman[0:GamesPlayed + 1])
 
-    DB = {"Name": PlayerName, "Country": PlayerTeamName.title(), "Dates": AllMatchDate, "DB Index": DBBatsman}
+    DB = {"Country": PlayerTeamName.title(), "Dates": np.ndarray.tolist(AllMatchDate), "DB Index": np.ndarray.tolist(DBBatsman)}
 
     # Display results
     PlotDates = list(map(datetime.datetime.strptime, AllMatchDate, len(AllMatchDate) * ['%d %b %Y']))
@@ -194,10 +194,8 @@ def DBCalculator(PlayerName, PlayerTeamName, PlayerNum):
     plt.xlabel('Date')
     plt.ylabel('Don Bradman Index')
     plt.title(f"DB Index for {PlayerName} = {DBBatsman[-1]:.2f}")
-
-    ax = plt.gcf().axes[0].xaxis.set_major_formatter(PlotFormat)
+    plt.gcf().axes[0].xaxis.set_major_formatter(PlotFormat)
     plt.gcf().autofmt_xdate(rotation=60)
-
     plt.show()
 
     return DB
