@@ -73,9 +73,6 @@ while True:
             print("Player not found! ", end="", flush=True)
             continue
 
-# Determine if player is batsman/allrounder/bowler (for appropriate calculations)
-BatBowlAllrounder = 3
-
 # Get all matches player has played in
 AllMatchURL = (f'http://stats.espncricinfo.com/ci/engine/player/{PlayerNum!s}'
                '.json?class=1;template=results;type=allround;view=match')
@@ -93,6 +90,10 @@ BatsmanRuns = np.zeros(len(AllMatchID))
 BatsmanInnings = np.zeros(len(AllMatchID))
 BatsmanNetBowling = np.zeros(len(AllMatchID))
 BatsmanNet = np.zeros(len(AllMatchID))
+BowlingNet = np.zeros(len(AllMatchID))
+BowlingTeamAverage = np.zeros(len(AllMatchID))
+BowlingAverage = np.zeros(len(AllMatchID))
+
 PrintLoop = 0
 
 for MatchID in AllMatchID:
@@ -228,25 +229,15 @@ for MatchID in AllMatchID:
         BatsmanNet[PrintLoop] = BatsmanRuns[PrintLoop] / (BatsmanInnings[PrintLoop] - BatsmanTimesNotOut[PrintLoop]) \
                                 - BatsmanNetBowling[PrintLoop]
 
-    # Get statistics for bowling
-    # Find player in bowling scorecard
-
-    # Get runs conceded as average of overall economy
-
-    # Store
-    # ScorecardBowling = ScorecardBowlingAll[
-    #         np.where((np.chararray.find(ScorecardBowlingAll[:, 0].astype(str), PlayerName) + 1) == 1)]
-    # If haven't bowled, don't do anything!
-
     print(
         f"    Completed {PrintLoop+1}/{len(AllMatchID)} ({(time.time() - t):.2f}s): {AllMatchDate[PrintLoop]} vs {AllMatchOpp[PrintLoop]} ")
     PrintLoop += 1
 
 # Calculate Don Bradman Index
 DBNet = 69.309311145510833
-m = 0.7214037937129101
-c = 50
-AllDBBatsman = (m * BatsmanNet) + c
+m1 = 0.7214037937129101
+c1 = 50
+AllDBBatsman = (m1 * BatsmanNet) + c1
 DBBatsman = np.zeros(len(AllMatchID))
 for GamesPlayed in range(0, len(AllMatchID)):
     DBBatsman[GamesPlayed] = np.nanmean(AllDBBatsman[0:GamesPlayed + 1])

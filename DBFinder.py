@@ -66,16 +66,12 @@ def DBCalculator(PlayerName, PlayerTeamName, PlayerNum):
         if BattedFirst in PlayerTeamName.title():
             ScorecardOppBowlingAll = np.vstack(
                 np.array([ScorecardBowlingRaw.values for ScorecardBowlingRaw in ScorecardBowlingJSON[0:4][::2]]))
-            ScorecardTeamBowlingAll = np.vstack(
-                np.array([ScorecardBowlingRaw.values for ScorecardBowlingRaw in ScorecardBowlingJSON[0:4][1::2]]))
             ScorecardOppExtrasRaw = np.vstack(
                 np.array(
                     [OppExtrasRaw.text for OppExtrasRaw in MatchSoup.findAll("div", {"class": "wrap extras"})[::2]]))
         else:
             ScorecardOppBowlingAll = np.vstack(
                 np.array([ScorecardBowlingRaw.values for ScorecardBowlingRaw in ScorecardBowlingJSON[0:4][1::2]]))
-            ScorecardTeamBowlingAll = np.vstack(
-                np.array([ScorecardBowlingRaw.values for ScorecardBowlingRaw in ScorecardBowlingJSON[0:4][::2]]))
             ScorecardOppExtrasRaw = np.vstack(
                 np.array(
                     [OppExtrasRaw.text for OppExtrasRaw in MatchSoup.findAll("div", {"class": "wrap extras"})[1::2]]))
@@ -165,12 +161,6 @@ def DBCalculator(PlayerName, PlayerTeamName, PlayerNum):
             BatsmanNet[PrintLoop] = BatsmanRuns[PrintLoop] / (BatsmanInnings[PrintLoop] - BatsmanTimesNotOut[PrintLoop]) \
                                     - BatsmanNetBowling[PrintLoop]
 
-        # Get statistics for bowling
-        # if BatBowlAllrounder == 2 | 3:
-        #     ScorecardBowling = ScorecardBowlingAll[
-        #         np.where((np.chararray.find(ScorecardBowlingAll[:, 0].astype(str), PlayerName) + 1) == 1)]
-        # If haven't bowled, don't do anything!
-
         print(
             f"    Completed {PrintLoop+1}/{len(AllMatchID)} ({(time.time() - t):.2f}s): {AllMatchDate[PrintLoop]} vs {AllMatchOpp[PrintLoop]} ")
         PrintLoop += 1
@@ -196,6 +186,6 @@ def DBCalculator(PlayerName, PlayerTeamName, PlayerNum):
     plt.title(f"DB Index for {PlayerName} = {DBBatsman[-1]:.2f}")
     plt.gcf().axes[0].xaxis.set_major_formatter(PlotFormat)
     plt.gcf().autofmt_xdate(rotation=60)
+    plt.savefig(f"Images/{PlayerTeamName.title()}{PlayerName}.png")
     plt.show()
-
     return DB

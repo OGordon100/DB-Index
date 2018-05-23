@@ -69,7 +69,6 @@ while True:
             print("Player not found! ", end="", flush=True)
             continue
 
-
 # Find DB index
 DB = DBCalculator(PlayerName, PlayerTeamName, PlayerNum)
 
