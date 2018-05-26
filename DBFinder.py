@@ -202,6 +202,6 @@ def DBCalculator(PlayerName, PlayerTeamName, PlayerNum):
     plt.gcf().axes[0].xaxis.set_major_formatter(PlotFormat)
     plt.gcf().autofmt_xdate(rotation=60)
     plt.savefig(f"Images/{PlayerTeamName.title()}/{PlayerName}.png")
-    plt.show()
+    #plt.show()
     plt.gcf().clear()
     return DB
