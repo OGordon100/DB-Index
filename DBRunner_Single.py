@@ -57,7 +57,7 @@ for PConstructor in PlayerListSoupLi:
     PConstructID = int(re.findall("\\d+", PConstructURL)[0])
     PlayerNameAll.update({PConstructName: PConstructID})
 
-# Pick player
+# Pick players
 print(f"Found {len(PlayerNameAll)!s} players for {PlayerTeamName.title()!s}")
 while True:
     PlayerName = input(f"Enter a name (e.g. {random.choice(list(PlayerNameAll.keys()))}) or type 'list' \n")

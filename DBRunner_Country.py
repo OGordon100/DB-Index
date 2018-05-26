@@ -29,7 +29,7 @@ NationNumsAll = {'england': 1,
 PlayerNameAll = {}
 BatsmanText = np.empty(0)
 
-# Select a format & team
+# Select a format & teams
 while True:
     try:
         PlayerTeamName = input('Enter a test playing nation: ').lower()

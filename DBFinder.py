@@ -154,7 +154,7 @@ def DBCalculator(PlayerName, PlayerTeamName, PlayerNum):
         BatsmanTimesNotOut[PrintLoop] = list(ScorecardBatting[:, 2]).count('not out') \
                                         + list(ScorecardBatting[:, 2]).count('absent hurt')
 
-        # Get average of bowlers
+        # Get average of bowler
         BatsmanRunsConc = np.sum(ScorecardOppBowlingAll[:, 4])
         BatsmanExtras = np.sum(np.array(
             re.findall('\d+', str(re.findall('Extras\d+', str(ScorecardOppExtrasRaw))))).astype(int))
