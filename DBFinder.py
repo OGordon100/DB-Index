@@ -83,7 +83,13 @@ def DBCalculator(PlayerName, PlayerTeamName, PlayerNum):
 
         BatsmanCommentary = np.vstack(
             np.array([BatsmanRawCommentary.text for BatsmanRawCommentary in AllBatsmanRawCommentary]))
-        BatsmanNames = np.vstack(np.array([BatsmanRawNames.text for BatsmanRawNames in AllBatsmanRawNames]))
+        try:
+            BatsmanNames = np.vstack(np.array([BatsmanRawNames.text for BatsmanRawNames in AllBatsmanRawNames]))
+        except ValueError:
+            print(f"         {AllMatchDate[PrintLoop]} Currently in Progress!")
+            BatsmanNet[PrintLoop] = float('nan')
+            PrintLoop += 1
+            continue
 
         # Find index of "R" to find out where each innings changes
         RIdx = np.array(())
@@ -193,6 +199,6 @@ def DBCalculator(PlayerName, PlayerTeamName, PlayerNum):
     plt.gcf().axes[0].xaxis.set_major_formatter(PlotFormat)
     plt.gcf().autofmt_xdate(rotation=60)
     plt.savefig(f"Images/{PlayerTeamName.title()}/{PlayerName}.png")
-    #plt.show()
+    plt.show()
     plt.gcf().clear()
     return DB
