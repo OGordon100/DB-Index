@@ -62,6 +62,15 @@ def DBCalculator(PlayerName, PlayerTeamName, PlayerNum):
             PrintLoop += 1
             continue
 
+        # Deal with in progress matches
+        InProgressFinder = MatchSoup.find("div", {"class": "wrap extras"})
+        print(InProgressFinder)
+        if str(InProgressFinder) == "None":
+            print(f"         {AllMatchDate[PrintLoop]} Currently in Progress!")
+            BatsmanNet[PrintLoop] = float('nan')
+            PrintLoop += 1
+            continue
+
         # Parse out actual bowling table (and extras which aren't in a table for some reason)
         if BattedFirst in PlayerTeamName.title():
             ScorecardOppBowlingAll = np.vstack(
@@ -83,13 +92,8 @@ def DBCalculator(PlayerName, PlayerTeamName, PlayerNum):
 
         BatsmanCommentary = np.vstack(
             np.array([BatsmanRawCommentary.text for BatsmanRawCommentary in AllBatsmanRawCommentary]))
-        try:
-            BatsmanNames = np.vstack(np.array([BatsmanRawNames.text for BatsmanRawNames in AllBatsmanRawNames]))
-        except ValueError:
-            print(f"         {AllMatchDate[PrintLoop]} Currently in Progress!")
-            BatsmanNet[PrintLoop] = float('nan')
-            PrintLoop += 1
-            continue
+
+        BatsmanNames = np.vstack(np.array([BatsmanRawNames.text for BatsmanRawNames in AllBatsmanRawNames]))
 
         # Find index of "R" to find out where each innings changes
         RIdx = np.array(())
