@@ -5,6 +5,9 @@ import numpy as np
 from DBFinder import DBCalculator
 import random
 import json
+import os.path
+import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
 
 # Define game formats/countries
 NationNumsAll = {'england': 1,
@@ -68,16 +71,26 @@ while True:
         except KeyError:
             print("Player not found! ", end="", flush=True)
             continue
+UpdateDB = 1
+if os.path.isfile(f"./Images/{PlayerTeamName.title()}/{PlayerName}.png"):
+    if input("Already in database. View result? [y/n]: ") == "y":
+        fig = plt.imshow(mpimg.imread(f"./Images/{PlayerTeamName.title()}/{PlayerName}.png"))
+        plt.axis('off')
+        fig.axes.get_xaxis().set_visible(False)
+        fig.axes.get_yaxis().set_visible(False)
+        plt.show()
+        UpdateDB = 0
 
-# Find DB index
-DB = DBCalculator(PlayerName, PlayerTeamName, PlayerNum)
+if UpdateDB == 1:
+    # Find DB index
+    DB = DBCalculator(PlayerName, PlayerTeamName, PlayerNum)
 
-# Open DB database
-with open('Database.json', 'r') as fp:
-    Database = json.load(fp)
+    # Open DB database
+    with open('Database.json', 'r') as fp:
+        Database = json.load(fp)
 
-Database[PlayerTeamName.title()][PlayerName] = DB
+    Database[PlayerTeamName.title()][PlayerName] = DB
 
-# Save DB database
-with open('Database.json', 'w') as fp:
-    json.dump(Database, fp)
+    # Save DB database
+    with open('Database.json', 'w') as fp:
+        json.dump(Database, fp)

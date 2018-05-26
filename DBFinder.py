@@ -150,7 +150,13 @@ def DBCalculator(PlayerName, PlayerTeamName, PlayerNum):
         BatsmanExtras = np.sum(np.array(
             re.findall('\d+', str(re.findall('Extras\d+', str(ScorecardOppExtrasRaw))))).astype(int))
         BatsmanWickets = np.sum(ScorecardOppBowlingAll[:, 5])
-        BatsmanNetBowling[PrintLoop] = (BatsmanRunsConc + BatsmanExtras) / BatsmanWickets
+        if BatsmanWickets > 0:
+            BatsmanNetBowling[PrintLoop] = (BatsmanRunsConc + BatsmanExtras) / BatsmanWickets
+        else:
+            print(f"         {AllMatchDate[PrintLoop]} Corrupted. Skipping")
+            BatsmanNet[PrintLoop] = float('nan')
+            PrintLoop += 1
+            continue
 
         # Calculate net score for batsman (need to tweak equation if never got out or didn't play!)
         if list(ScorecardBatting[:, 2]).count('absent hurt') > 0:
@@ -186,6 +192,7 @@ def DBCalculator(PlayerName, PlayerTeamName, PlayerNum):
     plt.title(f"DB Index for {PlayerName} = {DBBatsman[-1]:.2f}")
     plt.gcf().axes[0].xaxis.set_major_formatter(PlotFormat)
     plt.gcf().autofmt_xdate(rotation=60)
-    plt.savefig(f"Images/{PlayerTeamName.title()}{PlayerName}.png")
-    plt.show()
+    plt.savefig(f"Images/{PlayerTeamName.title()}/{PlayerName}.png")
+    #plt.show()
+    plt.gcf().clear()
     return DB
