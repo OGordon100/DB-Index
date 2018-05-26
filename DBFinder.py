@@ -64,7 +64,6 @@ def DBCalculator(PlayerName, PlayerTeamName, PlayerNum):
 
         # Deal with in progress matches
         InProgressFinder = MatchSoup.find("div", {"class": "wrap extras"})
-        print(InProgressFinder)
         if str(InProgressFinder) == "None":
             print(f"         {AllMatchDate[PrintLoop]} Currently in Progress!")
             BatsmanNet[PrintLoop] = float('nan')
