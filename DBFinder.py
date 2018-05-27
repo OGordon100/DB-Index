@@ -73,12 +73,14 @@ def DBCalculator(player_name, player_team_name, player_num):
             print_loop += 1
             continue
 
-        # Figure out home (=1) and away (=2) team
+        # Figure out home (=1) and away (=2) team (or neutral =0)
         find_home_1 = match_soup.find("div", {"class": "cscore_info-overview"}).text.split("tour of")
         if player_team_name.title() in find_home_1[0]:
             home_away[print_loop] = 2
-        else:
+        elif player_team_name.title() in find_home_1[1]:
             home_away[print_loop] = 1
+        else:
+            home_away[print_loop] = 0
 
         # Parse out actual bowling table (and extras which aren't in a table for some reason)
         if batted_first in player_team_name.title():
