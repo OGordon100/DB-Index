@@ -62,8 +62,9 @@ for PlayerName, PlayerNum in PlayerNameAll.items():
         Database = json.load(fp)
 
     # Find DB index
-    DB = DBCalculator(PlayerName, PlayerTeamName, PlayerNum)
-    Database[PlayerName] = DB
+    if PlayerName not in Database.keys():
+        DB = DBCalculator(PlayerName, PlayerTeamName, PlayerNum)
+        Database[PlayerName] = DB
 
     # Save DB database
     with open('Database.json', 'w') as fp:
