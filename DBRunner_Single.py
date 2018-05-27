@@ -89,7 +89,7 @@ if UpdateDB == 1:
     with open('Database.json', 'r') as fp:
         Database = json.load(fp)
 
-    Database[PlayerTeamName.title()][PlayerName] = DB
+    Database[PlayerName] = DB
 
     # Save DB database
     with open('Database.json', 'w') as fp:

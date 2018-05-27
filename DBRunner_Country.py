@@ -63,7 +63,7 @@ for PlayerName, PlayerNum in PlayerNameAll.items():
 
     # Find DB index
     DB = DBCalculator(PlayerName, PlayerTeamName, PlayerNum)
-    Database[PlayerTeamName.title()][PlayerName] = DB
+    Database[PlayerName] = DB
 
     # Save DB database
     with open('Database.json', 'w') as fp:
