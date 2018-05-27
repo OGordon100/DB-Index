@@ -80,6 +80,7 @@ def DBCalculator(player_name, player_team_name, player_num):
         elif player_team_name.title() in find_home_1[0]:
             home_away[print_loop] = 2
         elif player_team_name.title() in find_home_1[1]:
+            home_away[print_loop] = 1
 
         # Parse out actual bowling table (and extras which aren't in a table for some reason)
         if batted_first in player_team_name.title():
