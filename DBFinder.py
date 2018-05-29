@@ -217,9 +217,8 @@ def DBCalculator(player_name, player_team_name, player_num):
           "DB Index": np.ndarray.tolist(DBBatsman), "HomeAway": np.ndarray.tolist(home_away)}
 
     # Display results
-    print(all_match_date)
     PlotDates = list(
-        map(datetime.datetime.strptime, all_match_date[0:len(all_match_id) - 1], len(all_match_date) * ['%d %b %Y']))
+        map(datetime.datetime.strptime, all_match_date[0:len(all_match_id)], len(all_match_date) * ['%d %b %Y']))
     PlotFormat = dates.DateFormatter('%b %Y')
     plt.plot_date(PlotDates, DBBatsman, 'o-')
     plt.ylim(0, 110)
