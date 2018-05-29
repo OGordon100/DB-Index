@@ -56,17 +56,23 @@ for PConstructor in PlayerListSoupLi:
 # Pick player
 print(f"Found {len(PlayerNameAll)!s} players for {PlayerTeamName.title()!s}")
 
-for PlayerName, PlayerNum in PlayerNameAll.items():
-    # Open DB database
-    with open('Database.json', 'r') as fp:
+# Open DB database
+with open('Database.json', 'r') as fp:
         Database = json.load(fp)
+
+for PlayerName, PlayerNum in PlayerNameAll.items():
 
     # Find DB index
     if PlayerName not in Database.keys():
         DB = DBCalculator(PlayerName, PlayerTeamName, PlayerNum)
-        Database[PlayerName] = DB
+        
+        with open('Database.json', 'r') as fp:
+            Database = json.load(fp)
 
-    # Save DB database
-    with open('Database.json', 'w') as fp:
-        json.dump(Database, fp)
+        # Save DB database
+        Database[PlayerName] = DB
+        with open('Database.json', 'w') as fp:
+            json.dump(Database, fp)
+    else:
+        print(f"    Already Calculated {PlayerName}. Skipping")
 

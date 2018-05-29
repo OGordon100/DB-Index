@@ -1,4 +1,5 @@
 import urllib.request
+import urllib.error
 import pandas as pd
 from bs4 import BeautifulSoup
 import re
@@ -14,7 +15,12 @@ def DBCalculator(player_name, player_team_name, player_num):
     # Get all matches player has played in
     all_match_url = (f'http://stats.espncricinfo.com/ci/engine/player/{player_num!s}'
                      '.json?class=1;template=results;type=allround;view=match')
-    all_match_json = urllib.request.urlopen(all_match_url).read()
+    while True:
+        try:
+            all_match_json = urllib.request.urlopen(all_match_url).read()
+            break
+        except urllib.error.HTTPError:
+            print('         Server Timeout. Retrying...')
     all_match_soup = BeautifulSoup(all_match_json, "lxml")  # Make sure to retry!
     all_match_table = all_match_soup.findAll("table", {"class": "engineTable"})[3]
     all_match_date = np.array([MatchDate.text for MatchDate in all_match_soup.findAll("b")[3:-6]])
@@ -51,12 +57,16 @@ def DBCalculator(player_name, player_team_name, player_num):
 
         # Deal with too many tables being served for no reason
         for ExtraTableNum, ExtraTableFixData in enumerate(scorecard_bowling_json):
-            if np.size(ExtraTableFixData, 1) < 10:
-                del scorecard_bowling_json[ExtraTableNum]
+                if np.size(ExtraTableFixData, 1) < 10:
+                    del scorecard_bowling_json[ExtraTableNum]
         for ExtraTableNum, ExtraTableFixData in enumerate(scorecard_bowling_json):
             if np.size(ExtraTableFixData, 1) < 10:
                 del scorecard_bowling_json[
-                    ExtraTableNum]  # Built in compiler seems to skip 1 line, so need to run twice :(
+                    ExtraTableNum]
+        for ExtraTableNum, ExtraTableFixData in enumerate(scorecard_bowling_json):
+            if np.size(ExtraTableFixData, 1) < 10:
+                del scorecard_bowling_json[
+                    ExtraTableNum]  # Built in compiler seems to skip, so need to run twice, and can't be done in loop?
 
         # Deal with abandoned matches
         if len(scorecard_bowling_json) <= 1:
@@ -75,7 +85,7 @@ def DBCalculator(player_name, player_team_name, player_num):
 
         # Figure out home (=1) and away (=2) team (or neutral = 3)
         find_home_1 = match_soup.find("div", {"class": "cscore_info-overview"}).text.split("tour of")
-        if not find_home_1:
+        if len(find_home_1) == 1:
             home_away[print_loop] = 3
         elif player_team_name.title() in find_home_1[0]:
             home_away[print_loop] = 2
