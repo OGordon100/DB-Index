@@ -4,6 +4,7 @@ import re
 import numpy as np
 from DBFinder import DBCalculator
 import json
+import time
 
 # Define game formats/countries
 NationNumsAll = {'england': 1,
@@ -56,17 +57,29 @@ for PConstructor in PlayerListSoupLi:
 # Pick player
 print(f"Found {len(PlayerNameAll)!s} players for {PlayerTeamName.title()!s}")
 
-for PlayerName, PlayerNum in PlayerNameAll.items():
-    # Open DB database
-    with open('Database.json', 'r') as fp:
+# Open DB database
+with open('Database.json', 'r') as fp:
         Database = json.load(fp)
+
+for PlayerName, PlayerNum in PlayerNameAll.items():
 
     # Find DB index
     if PlayerName not in Database.keys():
         DB = DBCalculator(PlayerName, PlayerTeamName, PlayerNum)
+        
+        while True:
+            try:
+                with open('Database.json', 'r') as fp:
+                    Database = json.load(fp)
+                    break
+            except:
+                print('Database currently in use. Retrying.')
+                time.sleep(5)
+                
+        # Save DB database
         Database[PlayerName] = DB
-
-    # Save DB database
-    with open('Database.json', 'w') as fp:
-        json.dump(Database, fp)
+        with open('Database.json', 'w') as fp:
+            json.dump(Database, fp)
+    else:
+        print(f"    Already Calculated {PlayerName}. Skipping")
 
