@@ -4,7 +4,6 @@ import re
 import numpy as np
 from DBFinder import DBCalculator
 import json
-import time
 
 # Define game formats/countries
 NationNumsAll = {'england': 1,
