@@ -67,18 +67,12 @@ for PlayerName, PlayerNum in PlayerNameAll.items():
     if PlayerName not in Database.keys():
         DB = DBCalculator(PlayerName, PlayerTeamName, PlayerNum)
         
-        while True:
-            try:
-                with open('Database.json', 'r') as fp:
-                    Database = json.load(fp)
-                    break
-            except:
-                print('Database currently in use. Retrying.')
-                time.sleep(5)
-                
+        with open("Database.json", 'r+') as fp:
+            Database = json.load(fp)
+
         # Save DB database
         Database[PlayerName] = DB
-        with open('Database.json', 'w') as fp:
+        with open("Database.json", 'r+') as fp:
             json.dump(Database, fp)
     else:
         print(f"    Already Calculated {PlayerName}. Skipping")
